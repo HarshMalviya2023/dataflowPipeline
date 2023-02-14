@@ -1,7 +1,7 @@
 steps:
+- name: 'gcr.io/cloud-builders/git'
+ args: ['clone', 'https://github.com/harshmalviya2023/dataflowPipeline.git', '.']
 - name: 'gcr.io/cloud-builders/mvn'
- args: ['install']
+ args: ['package']
 - name: 'gcr.io/cloud-builders/gsutil'
  args: ['cp', 'target/myjar.jar', 'gs://dataset2023/myjar.jar']
-- name: 'gcr.io/cloud-builders/gcloud'
- args: ['dataflow', 'flex-template', 'build', 'gs://dataset2023/my-template', '--image-gcr-path', 'gcr.io/learning-313419/my-image', '--sdk-language', 'JAVA', '--metadata-file', 'metadata.json', '--jar', 'gs://dataset2023/myjar.jar']
