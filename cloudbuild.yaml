@@ -1,32 +1,7 @@
 steps:
-  - id: "get build number"
-    name: gcr.io/cloud-builders/git
-    dir: 'cloudbuild-dataflow-demo/streaming'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        git rev-parse --short HEAD > _BUILDNUMBER
-    waitFor: ['-']
-
-  - id: "build and submit the dataflow job"
-    name: maven:3.6.0-jdk-11-slim
-    dir: 'cloudbuild-dataflow-demo/streaming'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        buildNumber=$(cat _BUILDNUMBER)
-        echo "Build Number is ${buildNumber}"
-        DataflowDemoPipeline \
-          --project=learning-313419 \
-          --stagingLocation=gs://dataset2023/temp/ \
-          --gcpTempLocation=gs://dataset2023/temp/ \
-          --runner=DataflowRunner \
-          --autoscalingAlgorithm=THROUGHPUT_BASED \
-          --maxNumWorkers=10 \
-          --jobName=demo \
-          --buildNumber=${buildNumber} \
-          --subscription=dataflow_demo_subscription \
-          --region=us-west1
-    waitFor: ['get build number']
+- name: 'gcr.io/cloud-builders/mvn'
+ args: ['install']
+- name: 'gcr.io/cloud-builders/gsutil'
+ args: ['cp', 'target/myjar.jar', 'gs://dataset2023/myjar.jar']
+- name: 'gcr.io/cloud-builders/gcloud'
+ args: ['dataflow', 'flex-template', 'build', 'gs://dataset2023/my-template', '--image-gcr-path', 'gcr.io/learning-313419/my-image', '--sdk-language', 'JAVA', '--metadata-file', 'metadata.json', '--jar', 'gs://dataset2023/myjar.jar']
